@@ -3,6 +3,7 @@
 namespace Illuminate\Validation;
 
 use Illuminate\Database\ConnectionResolverInterface;
+use Schema;
 
 class DatabasePresenceVerifier implements PresenceVerifierInterface
 {
@@ -48,6 +49,10 @@ class DatabasePresenceVerifier implements PresenceVerifierInterface
 
         if (! is_null($excludeId) && $excludeId != 'NULL') {
             $query->where($idColumn ?: 'id', '<>', $excludeId);
+
+            // ignore softDeletes
+            if(Schema::hasColumn($query->from, 'deleted_at'))
+                $query->whereNotNull('deleted_at');
         }
 
         foreach ($extra as $key => $extraValue) {
