@@ -46,6 +46,11 @@ class DatabasePresenceVerifier implements PresenceVerifierInterface
     {
         $query = $this->table($collection)->where($column, '=', $value);
 
+        if( $this->db->connection($this->connection)->getSchemaBuilder()->hasColumn($collection, 'deleted_at') )
+        {
+            $query->whereNull('deleted_at');
+        }
+
         if (! is_null($excludeId) && $excludeId != 'NULL') {
             $query->where($idColumn ?: 'id', '<>', $excludeId);
         }
@@ -69,6 +74,11 @@ class DatabasePresenceVerifier implements PresenceVerifierInterface
     public function getMultiCount($collection, $column, array $values, array $extra = [])
     {
         $query = $this->table($collection)->whereIn($column, $values);
+
+        if( $this->db->connection($this->connection)->getSchemaBuilder()->hasColumn($collection, 'deleted_at') )
+        {
+            $query->whereNull('deleted_at');
+        }
 
         foreach ($extra as $key => $extraValue) {
             $this->addWhere($query, $key, $extraValue);
