@@ -177,7 +177,7 @@ abstract class Grammar
      */
     public function getDateFormat()
     {
-        return 'Y-m-d H:i:s';
+        return config('app.date_format', 'Y-m-d H:i:s');
     }
 
     /**
