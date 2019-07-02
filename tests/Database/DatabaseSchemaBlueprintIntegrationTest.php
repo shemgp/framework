@@ -73,6 +73,30 @@ class DatabaseSchemaBlueprintIntegrationTest extends TestCase
         $this->assertEquals($expected, $queries);
     }
 
+    public function testChangingTypeOfColumnWithUsingWork()
+    {
+        $this->db->connection()->getSchemaBuilder()->create('users', function ($table) {
+            $table->string('name');
+            $table->boolean('special_price');
+        });
+
+        $blueprint = new Blueprint('users', function ($table) {
+            $table->decimal('special_price', 12, 4)->nullable()->change()->using('special_price::int::numeric(12,4)');
+        });
+
+        $queries = $blueprint->toSql($this->db->connection(), new SQLiteGrammar);
+
+        $expected = [
+            "CREATE TEMPORARY TABLE __temp__users AS SELECT name, special_price FROM users",
+            "DROP TABLE users",
+            "CREATE TABLE users (name VARCHAR(255) NOT NULL COLLATE BINARY, special_price NUMERIC(12, 4) DEFAULT NULL)",
+            "INSERT INTO users (name, special_price) SELECT name, special_price FROM __temp__users",
+            "DROP TABLE __temp__users"
+        ];
+
+        $this->assertEquals($expected, $queries);
+    }
+
     public function testChangingColumnWithCollationWorks()
     {
         $this->db->connection()->getSchemaBuilder()->create('users', function ($table) {
