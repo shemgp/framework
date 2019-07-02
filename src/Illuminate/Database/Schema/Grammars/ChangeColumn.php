@@ -38,7 +38,19 @@ class ChangeColumn
         );
 
         if ($tableDiff !== false) {
-            return (array) $schema->getDatabasePlatform()->getAlterTableSQL($tableDiff);
+            $statements = (array) $schema->getDatabasePlatform()->getAlterTableSQL($tableDiff);
+
+            foreach($blueprint->getColumns() as $column) {
+                if ($column->change && $column->using) {
+                    foreach($statements as $key => $statement) {
+                        if (preg_match('/ALTER.*TYPE/', $statement)) {
+                            $statements[$key] = $statement.' USING '.$column->using;
+                        }
+                    }
+                }
+            }
+
+            return $statements;
         }
 
         return [];
